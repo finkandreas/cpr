@@ -49,6 +49,7 @@ class Session::Impl {
     Url url_;
     Parameters parameters_;
     Proxies proxies_;
+    bool multipart_;
 
     Response makeRequest(CURL* curl);
     static void freeHolder(CurlHolder* holder);
@@ -58,6 +59,7 @@ class Session::Impl {
 Session::Impl::Impl() {
     curl_ = std::unique_ptr<CurlHolder, std::function<void(CurlHolder*)>>(newHolder(),
                                                                           &Impl::freeHolder);
+    multipart_ = false;
     auto curl = curl_->handle;
     if (curl) {
         // Set up some sensible defaults
@@ -69,6 +71,7 @@ Session::Impl::Impl() {
         curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
         curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curl_->error);
         curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, 0);
 #ifdef CPR_CURL_NOSIGNAL
         curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 #endif
@@ -161,6 +164,7 @@ void Session::Impl::SetPayload(Payload&& payload) {
     if (curl) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, payload.content.length());
         curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS, payload.content.data());
+        multipart_ = false;
     }
 }
 
@@ -169,6 +173,7 @@ void Session::Impl::SetPayload(const Payload& payload) {
     if (curl) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, payload.content.length());
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload.content.data());
+        multipart_ = false;
     }
 }
 
@@ -210,6 +215,7 @@ void Session::Impl::SetMultipart(Multipart&& multipart) {
 
         curl_formfree(curl_->formpost);
         curl_->formpost = formpost;
+        multipart_ = true;
     }
 }
 
@@ -242,6 +248,7 @@ void Session::Impl::SetMultipart(const Multipart& multipart) {
 
         curl_formfree(curl_->formpost);
         curl_->formpost = formpost;
+        multipart_ = true;
     }
 }
 
@@ -272,6 +279,7 @@ void Session::Impl::SetBody(Body&& body) {
     if (curl) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, body.length());
         curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS, body.data());
+        multipart_ = false;
     }
 }
 
@@ -280,6 +288,7 @@ void Session::Impl::SetBody(const Body& body) {
     if (curl) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, body.length());
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.data());
+        multipart_ = false;
     }
 }
 
@@ -314,7 +323,8 @@ Response Session::Impl::Get() {
     auto curl = curl_->handle;
     if (curl) {
         curl_easy_setopt(curl, CURLOPT_NOBODY, 0L);
-        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, NULL);
+        curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
     }
 
     return makeRequest(curl);
@@ -354,7 +364,8 @@ Response Session::Impl::Post() {
     auto curl = curl_->handle;
     if (curl) {
         curl_easy_setopt(curl, CURLOPT_NOBODY, 0L);
-        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, NULL);
+        if (false == multipart_) curl_easy_setopt(curl, CURLOPT_POST, 1L);
     }
 
     return makeRequest(curl);
@@ -377,6 +388,9 @@ Response Session::Impl::makeRequest(CURL* curl) {
     } else {
         curl_easy_setopt(curl, CURLOPT_URL, url_.data());
     }
+
+    // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
 
     auto protocol = url_.substr(0, url_.find(':'));
     if (proxies_.has(protocol)) {
