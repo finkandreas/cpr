@@ -9,6 +9,7 @@ Cookies::Cookies(const std::initializer_list<std::pair<const std::string, std::s
 
 std::string Cookies::GetEncoded() const {
     std::stringstream stream;
+    unsigned int counter=0;
     for (const auto& item : map_) {
         stream << cpr::util::urlEncode(item.first) << "=";
         // special case version 1 cookies, which can be distinguished by
@@ -16,9 +17,9 @@ std::string Cookies::GetEncoded() const {
         if (!item.second.empty() && item.second.front() == '"' && item.second.back() == '"') {
             stream << item.second;
         } else {
-            stream << cpr::util::urlEncode(item.second);
+            stream << item.second; // cpr::util::urlEncode(item.second);
         }
-        stream << "; ";
+        if (++counter < map_.size()) stream << "; ";
     }
     return stream.str();
 }
