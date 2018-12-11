@@ -69,6 +69,11 @@ TEST(BasicTests, BadHostTest) {
     EXPECT_EQ(ErrorCode::HOST_RESOLUTION_FAILURE, response.error.code);
 }
 
+/*
+GET with a request body is considered bad, since the reply should NOT depend on any request body content
+https://tools.ietf.org/html/rfc2616#section-9.3
+   The GET method means retrieve whatever information (in the form of an
+   entity) is identified by the Request-URI.
 TEST(BasicTests, RequestBodyTest) {
     auto url = Url{base + "/body_get.html"};
     auto body = Body{"message=abc123"};
@@ -80,6 +85,7 @@ TEST(BasicTests, RequestBodyTest) {
     EXPECT_EQ(200, response.status_code);
     EXPECT_EQ(ErrorCode::OK, response.error.code);
 }
+*/
 
 TEST(CookiesTests, SingleCookieTest) {
     auto url = Url{base + "/basic_cookies.html"};
