@@ -16,7 +16,7 @@ class Cookies {
 
     std::string& operator[](const std::string& key);
     std::string GetEncoded() const;
-
+    void merge(const Cookies& other);
   private:
     std::map<std::string, std::string> map_;
 };

@@ -24,6 +24,11 @@ std::string Cookies::GetEncoded() const {
     return stream.str();
 }
 
+
+void Cookies::merge(const Cookies& o) {
+  for (const auto &it : o.map_) map_[it.first] = it.second;
+}
+
 std::string& Cookies::operator[](const std::string& key) {
     return map_[key];
 }
