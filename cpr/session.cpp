@@ -72,9 +72,7 @@ Session::Impl::Impl() {
         curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curl_->error);
         curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, 0);
-#ifdef CPR_CURL_NOSIGNAL
         curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
-#endif
 #if LIBCURL_VERSION_MAJOR >= 7
 #if LIBCURL_VERSION_MINOR >= 25
 #if LIBCURL_VERSION_PATCH >= 0
@@ -391,6 +389,7 @@ Response Session::Impl::makeRequest(CURL* curl) {
 
     // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 20L);
 
     auto protocol = url_.substr(0, url_.find(':'));
     if (proxies_.has(protocol)) {
