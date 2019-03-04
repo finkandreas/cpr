@@ -2,7 +2,7 @@
 
 namespace cpr {
 
-VerifySsl::VerifySsl(bool verify) : verify_{verify} {}
+VerifySsl::VerifySsl(bool verify, const std::string &cacert) : verify_{verify}, cacert_(cacert) {}
 
 VerifySsl::operator bool() const {
     return verify_;

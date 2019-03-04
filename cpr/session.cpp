@@ -303,6 +303,9 @@ void Session::Impl::SetVerifySsl(const VerifySsl& verify) {
     if (curl) {
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, verify ? 1L : 0L);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, verify ? 2L : 0L);
+        if (verify && !verify.get_cacert().empty()) {
+            curl_easy_setopt(curl, CURLOPT_CAINFO, verify.get_cacert().c_str());
+        }
     }
 }
 
@@ -387,7 +390,7 @@ Response Session::Impl::makeRequest(CURL* curl) {
         curl_easy_setopt(curl, CURLOPT_URL, url_.data());
     }
 
-    // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+//    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 20L);
 
